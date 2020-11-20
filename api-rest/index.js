@@ -12,8 +12,8 @@ const fs = require('fs');
 const helmet = require("helmet");
 
 const opciones = {
-    key: fs.readFileSync('./cert/key.pen'),
-    cert: fs.readFileSync('./cert/cert.pen')
+    key: fs.readFileSync('./cert/key.pem'),
+    cert: fs.readFileSync('./cert/cert.pem')
 };
 
 const app = express();
