@@ -4,11 +4,11 @@ const cookieParser = require('cookie-parser')
 
 router.use(cookieParser());
 router.get('/users/signin', (req,res) =>{
-    res.render('Signin');
+    res.render('users/Signin');
 });
 
 router.get('/users/signup', (req,res) =>{
-    res.render('Signup');
+    res.render('users/Signup');
 });
 
 function validateCookie(req,res,next){
