@@ -3,5 +3,10 @@
 <p class="lead">Registrate con tu nombre, email y contraseña</p>
 <hr class="my-4">
 <p>Introduce los datos</p>
-<a href="http://google.com" class="btn btn-primary btn-lg">Google</a>
+<form action="/api" method="GET">
+    <p>Email: <input type="text" name="email"/></p>
+    <p>Nombre: <input type="text" name="nombre" /></p>
+    <p>Contraseña: <input type="text" name="contraseña"/></p>
+    <p><input type="submit" value="Enviar" class="btn btn-primary btn-lg"/></p>
+</form>
 </div>

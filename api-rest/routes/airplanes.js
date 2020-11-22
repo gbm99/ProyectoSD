@@ -7,15 +7,18 @@ const Airplane = require('../models/Airplane');
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 
-router.get('/aviones', (req,res) =>{
-    res.send('Catálogo de ofertas de aviones');
+router.get('/aviones', async(req,res) =>{
+   
+    const airplanes =  await Airplane.find().lean().sort({date: 'desc'});
+    res.render('airplanes/all-airplanes', {airplanes});
+
 });
 
 router.get('/aviones/add', (req,res) =>{
     res.render('airplanes/new_airplane');
 });
 
-router.post('/aviones/new-airplane', (req, res) =>{
+router.post('/aviones/new-airplane', async(req, res) =>{
     const {title, description}=req.body;
     const errors = [];
     if(!title){
@@ -33,7 +36,7 @@ router.post('/aviones/new-airplane', (req, res) =>{
     }
     else{
         const newAirplane = new Airplane({title,description});
-        newAirplane.save();
+        await newAirplane.save();
         res.redirect('/aviones');
     }
 });
