@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 //DB base de datos
 var db = mongojs(URL_DB);
 var id = mongojs.ObjectID;
-
+//Middlewares
 app.use(helmet());
 app.use(logger('dev'));
 app.use(express.urlencoded({extended: false}));
