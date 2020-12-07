@@ -7,7 +7,7 @@ const logger = require('morgan');
 const mongojs = require('mongojs');
 var MongoClient = require('mongodb').MongoClient;
 
-const URL_DB = "mongodb+srv://gbm99:severoochoa99@clustersd.mdwel.mongodb.net/dbairplanes?retryWrites=w=majority";
+const URL_DB = "mongodb+srv://gbm99:salami99@clustersd.mdwel.mongodb.net/dbairplanes?retryWrites=w=majority";
 const https = require('https');
 const fs = require('fs');
 const helmet = require("helmet");
