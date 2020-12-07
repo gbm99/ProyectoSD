@@ -5,8 +5,9 @@ const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const mongojs = require('mongojs');
+var MongoClient = require('mongodb').MongoClient;
 
-const URL_DB = "localhost:27017/bdaviones";
+const URL_DB = "mongodb+srv://gbm99:severoochoa99@clustersd.mdwel.mongodb.net/dbairplanes?retryWrites=w=majority";
 const https = require('https');
 const fs = require('fs');
 const helmet = require("helmet");
@@ -28,7 +29,8 @@ app.use(require('./routes/users'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //DB base de datos
-var db = mongojs(URL_DB);
+var mongoClient = new MongoClient(URL_DB,{ useUnifiedTopology: true });
+mongoClient.connect();
 var id = mongojs.ObjectID;
 //Middlewares
 app.use(helmet());

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/bdaviones',{
+mongoose.connect("mongodb+srv://gbm99:severoochoa99@clustersd.mdwel.mongodb.net/dbairplanes?retryWrites=w=majority",{
     useCreateIndex: true,
     useNewUrlParser: true,
     useFindAndModify: false,
