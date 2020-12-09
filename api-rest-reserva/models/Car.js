@@ -1,6 +1,7 @@
 const { ObjectId } = require('mongodb');
-const mongoose = require('mongoose');
-mongoose.createConnection("mongodb+srv://gbm99:salami99@clustersd.mdwel.mongodb.net/dbcars?retryWrites=true&w=majority",{
+const Mongoose = require('mongoose').Mongoose;
+var mongoose = new Mongoose();
+mongoose.connect("mongodb+srv://gbm99:salami99@clustersd.mdwel.mongodb.net/dbcars?retryWrites=true&w=majority",{
     useCreateIndex: true,
     useNewUrlParser: true,
     useFindAndModify: false,
