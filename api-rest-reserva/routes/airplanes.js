@@ -4,11 +4,36 @@ const bodyParser = require('body-parser');
 const methodOverride = require("method-override");
 
 const Airplane = require('../models/Airplane');
+//const Transactions = require('../models/Airplane');
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(methodOverride('_method'));
 
+const Transaccion = {
+readPreference: 'primary',
+readConcern:{ level: 'local'},
+writeConcern: {w: 'majority'}
+}
+/*
+async function updatePost(userId,reserva,req, title, description){
+    const session=Airplane.startSession();
+    (await session).startTransaction();
+    try{
+        const opts = {session};
+        await Airplane.findByIdAndUpdate(req.params.id, {title, description}).lean();
+        await Transactions(
+              {userId:userId, amount: amount, type: "credit"}).save(opts);
+        (await session).commitTransaction();
+        (await session).endSession();
+        return true;
+    }catch (error){
+        (await session).abortTransaction();
+        (await session).endSession();
+        throw error;
+    }
+}
+*/
 router.get('/aviones', async(req,res) =>{
    
     const airplanes =  await Airplane.find().lean().sort({date: 'desc'});
@@ -45,7 +70,7 @@ router.post('/aviones/new-airplane', async(req, res) =>{
     }
     else{
         const newAirplane = new Airplane({title,description});
-        await newAirplane.save();
+        await newAirplane.save(Transaccion);
         res.redirect('/aviones/modify');
     }
 });

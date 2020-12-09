@@ -35,7 +35,7 @@
     "method-override": "^3.0.0",
     "mongodb": "^3.6.2",
     "mongojs": "^3.1.0",
-    "mongoose": "^5.10.15",
+    "mongoose": "^5.11.6",
     "morgan": "^1.10.0",
     "node-php": "0.0.1",
     "node-phpcgi": "^0.3.7",
