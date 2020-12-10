@@ -3,10 +3,11 @@
 <p class="lead">Registrate con tu nombre, email y contraseña</p>
 <hr class="my-4">
 <p>Introduce los datos</p>
-<form action="/api" method="GET">
-    <p>Email: <input type="text" name="email"/></p>
-    <p>Nombre: <input type="text" name="nombre" /></p>
-    <p>Contraseña: <input type="text" name="contraseña"/></p>
+<form action="/users/signup" method="POST">
+    <p>Email: <input type="email" name="email"/></p>
+    <p>Nombre: <input type="text" name="name" /></p>
+    <p>Contraseña: <input type="password" name="password"/></p>
+    <p>ConfirmPas: <input type="password" name="confirm_password"/></p>
     <p><input type="submit" value="Enviar" class="btn btn-primary btn-lg"/></p>
 </form>
 </div>
