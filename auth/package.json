@@ -19,5 +19,8 @@
     "bcrypt": "^5.0.0",
     "jwt-simple": "^0.5.6",
     "moment": "^2.29.1"
+  },
+  "devDependencies": {
+    "cookie-parser": "^1.4.5"
   }
 }

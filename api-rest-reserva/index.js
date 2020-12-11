@@ -23,7 +23,6 @@ const app = express();
 app.use(require('./routes/airplanes'));
 app.use(require('./routes/cars'));
 app.use(require('./routes/hotels'));
-app.use(require('./routes/users'));
 
 //Static Files
 app.use(express.static(path.join(__dirname, 'public')));
