@@ -7,7 +7,7 @@ const logger = require('morgan');
 const mongojs = require('mongojs');
 var MongoClient = require('mongodb').MongoClient;
 
-const URL_DB = "mongodb+srv://gbm99:salami99@clustersd.mdwel.mongodb.net/dbairplanes?retryWrites=w=majority";
+const URL_DB = "mongodb+srv://gbm99:salami99@ClusterSD.mdwel.mongodb.net";
 const https = require('https');
 const fs = require('fs');
 const helmet = require("helmet");
@@ -77,20 +77,26 @@ function auth(req,res,next){
     return next(new Error("No has enviado el token a la cabecera"));
 }
 
-app.get('/api', (request, response, next) => {
+async function listDatabases(){
+    var databaslist = await mongoClient.db().admin().listDatabases();
+    var array = [];
+    console.log("databases:");
+    databaslist.databases.forEach(db => array.push(db.name));
+    console.log(array);
+    return array;
+};
+
+app.get('/api',(request, response, next) => {
     console.log('GET /api');
     console.log(request.params);
     console.log(request.collection);
         
-    db.getCollectionNames((err,colecciones)=> {
-        if(err) return next(err);
-        console.log(colecciones);
+    listDatabases().then(v =>{
         response.json({
-            result :"OK",
-        colecciones: colecciones
-        });
-    });
-
+            result:"OK",
+            coleccion: v
+        })
+    })
 });
 
 app.get('/api/:colecciones', (request, response,next) =>{
