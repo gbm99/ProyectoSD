@@ -3,11 +3,13 @@
 const port = process.env.PORT || 5000;
 const express = require('express');
 const router = express();
+const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 var http = require('http');
 const bodyParser = require('body-parser');
 const methodOverride = require("method-override");
+const passport = require('passport');
 
 // Settings
 var exphbs = require('express-handlebars');
@@ -17,13 +19,20 @@ router.engine('.hbs',exphbs({
 }));
 router.set('view engine', '.hbs');
 const User = require('./models/User');
-
+require('./config/passport');
 router.use(cookieParser());
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(methodOverride('_method'));
+router.use(session({
+    secret: 'mysecretapp',
+    resave: true,
+    saveUninitialized: true
+}));
 //Static Files
 router.use(express.static(path.join(__dirname, 'public')));
+router.use(passport.initialize());
+router.use(passport.session());
 
 router.get('/users/signin', (req,res) =>{
     res.render('users/Signin');
@@ -69,6 +78,11 @@ router.post('/users/signup', async (req,res,next) =>{
     }
 
 })
+
+router.post('/users/signin', passport.authenticate('local', {
+    successRedirect: '/users/cookieSet',
+    failureRedirect: '/users/signin'
+}));
 
 function validateCookie(req,res,next){
 

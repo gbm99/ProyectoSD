@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //DB base de datos
 var mongoClient = new MongoClient(URL_DB,{ useUnifiedTopology: true });
-mongoClient.connect();
+var db=mongoClient.connect();
 var id = mongojs.ObjectID;
 //Middlewares
 app.use(helmet());
@@ -48,8 +48,11 @@ app.set('view engine', '.hbs');
 app.param("colecciones",(request,response,next,coleccion) => {
     console.log('param /api/:colecciones');
     console.log('colección', coleccion);
+    const db =`db${coleccion}`;
+    
+    request.collection = mongoClient.db(db).collection(coleccion);
 
-    request.collection = db.collection(coleccion);
+    console.log(db);
     return next();
 })
 
@@ -79,9 +82,7 @@ function auth(req,res,next){
 async function listDatabases(){
     var databaslist = await mongoClient.db().admin().listDatabases();
     var array = [];
-    console.log("databases:");
     databaslist.databases.forEach(db => array.push(db.name));
-    console.log(array);
     return array;
 };
 
@@ -93,49 +94,35 @@ app.get('/api',(request, response, next) => {
     listDatabases().then(v =>{
         response.json({
             result:"OK",
-            coleccion: v
+            colecciones: v
         })
     })
 });
 
 app.get('/api/:colecciones', (request, response,next) =>{
-    console.log('GET /api/:colecciones');
-    console.log(request.params);
-    console.log(request.collection);
 
-    request.collection.find((err,coleccion)=>{
+    request.collection.find({}).toArray(function(err, coleccion){
         if(err) return next(err);
-        console.log(coleccion);
         response.json({
-            result :"OK",
-            colección: request.params.colecciones,
+            result: 'ok',
+            coleccion: request.params.colecciones,
             elementos: coleccion
-        });
-    });
-
-    /*
-    response.status(200).send({
-        _id:`${ID}`,
-        name: 'nom'
-
-
+        })
     })
-    */
 });
 
 app.get('/api/:colecciones/:id', (request, response,next) =>{
 const queId = request.params.id;
 const queColeccion = request.params.colecciones;
 
-    request.collection.findOne({_id: id(queId)}, (err,elemento)=>{
+    request.collection.findOne({queId}).toArray(function(err, coleccion){
         if(err) return next(err);
-        console.log(elemento);
         response.json({
-            result :"OK",
-            colección: queColeccion,
-            elementos: elemento
-        });
-    });
+            result: 'ok',
+            coleccion: request.params.colecciones,
+            elementos: coleccion
+        })
+    })
 
     /*
     response.status(200).send({
