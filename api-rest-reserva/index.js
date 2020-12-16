@@ -4,8 +4,8 @@ const port = process.env.PORT || 3000;
 const express = require('express');
 const path = require('path');
 const logger = require('morgan');
-const mongojs = require('mongojs');
 var MongoClient = require('mongodb').MongoClient;
+var objectID = require('mongodb').ObjectID;
 
 const URL_DB = "mongodb+srv://gbm99:salami99@ClusterSD.mdwel.mongodb.net";
 const https = require('https');
@@ -29,8 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //DB base de datos
 var mongoClient = new MongoClient(URL_DB,{ useUnifiedTopology: true });
-var db=mongoClient.connect();
-var id = mongojs.ObjectID;
+mongoClient.connect();
 //Middlewares
 app.use(helmet());
 app.use(logger('dev'));
@@ -52,7 +51,6 @@ app.param("colecciones",(request,response,next,coleccion) => {
     
     request.collection = mongoClient.db(db).collection(coleccion);
 
-    console.log(db);
     return next();
 })
 
@@ -115,7 +113,7 @@ app.get('/api/:colecciones/:id', (request, response,next) =>{
 const queId = request.params.id;
 const queColeccion = request.params.colecciones;
 
-    request.collection.findOne({queId}).toArray(function(err, coleccion){
+    request.collection.find({_id:new objectID(queId)}).toArray(function(err, coleccion){
         if(err) return next(err);
         response.json({
             result: 'ok',
@@ -157,9 +155,8 @@ app.put('/api/:colecciones/:id',auth, (req, res, next) => {
     const queId = req.params.id;
     const queColeccion = req.params.colecciones;
     const elementoNuevo = req.body;
-
     req.collection.update(
-        {_id: id(queId)}, 
+        {_id: new objectID(queId)}, 
         {$set: elementoNuevo},
         {safe: true, multi: false},
         (err, result) => { 
@@ -180,7 +177,7 @@ app.delete('/api/:colecciones/:id',auth, (req, res, next) => {
     const queColeccion = req.params.colecciones;
  
     req.collection.remove(
-        {_id: id(queId)},
+        {_id: new objectID(queId)},
         (err, result) => { 
             if (err) return next(err); 
 

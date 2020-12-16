@@ -98,46 +98,57 @@ app.post('/api/:colecciones',auth, (request, response) =>{
     */
 });
 
-app.put('/api/:colecciones/:id', (req, res, next) => {  
-    const queId = req.params.id;
-    const queColeccion = req.params.colecciones;
-    const elementoNuevo = req.body;
+app.put('/api/:colecciones/:id',auth, (request, response, next) => {  
+    const queColeccion = request.params.colecciones;
+    const queId = request.params.id;
+    const queURL =`${URL_WS}/${queColeccion}/${queId}`;
+    const nuevoElemento = request.body;
+    const queToken = request.params.token;
 
-    req.collection.update(
-        {_id: id(queId)}, 
-        {$set: elementoNuevo},
-        {safe: true, multi: false},
-        (err, result) => { 
-        if (err) return next(err); 
-            console.log(result);
-            res.json({
+    fetch( queURL, {
+        method: 'PUT',
+        body: JSON.stringify(nuevoElemento),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( json => {
+            response.json({
                 result: 'OK',
                 colección: queColeccion,
-                _id: queId,
-                resultado: result
+                resultado: json.elemento
             });
         }
-    ); 
+    );
 }); 
 
-app.delete('/api/:colecciones/:id', (req, res, next) => { 
-    const queId = req.params.id;
-    const queColeccion = req.params.colecciones;
- 
-    req.collection.remove(
-        {_id: id(queId)},
-        (err, result) => { 
-            if (err) return next(err); 
+app.delete('/api/:colecciones/:id', (request, response, next) => { 
+    const queColeccion = request.params.colecciones;
+    const queId = request.params.id;
+    const queURL =`${URL_WS}/${queColeccion}/${queId}`;
+    const nuevoElemento = request.body;
+    const queToken = request.params.token;
 
-                console.log(result);
-                res.json({
-                    result: 'OK',
-                    colección: queColeccion,
-                    _id: queId,
-                    resultado: result
-                });
+    fetch( queURL, {
+        method: 'DELETE',
+        body: JSON.stringify(nuevoElemento),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
         }
-    ); 
+
+    } )
+        .then(response => response.json())
+        .then( json => {
+            response.json({
+                result:'OK',
+                coleccion: queColeccion,
+                _id: queId,
+                nuevoElemento: json.elemento
+            });
+        }
+    );
 });
 
 app.listen(port, () => {

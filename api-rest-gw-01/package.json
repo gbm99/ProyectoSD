@@ -24,7 +24,7 @@
   "homepage": "https://bitbucket.org/germantor989/api-rest-01#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "mongodb": "^3.6.2",
+    "mongodb": "^3.6.3",
     "mongojs": "^3.1.0",
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1"
