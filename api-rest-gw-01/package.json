@@ -23,6 +23,7 @@
   "license": "ISC",
   "homepage": "https://bitbucket.org/germantor989/api-rest-01#readme",
   "dependencies": {
+    "dom-parser": "^0.1.6",
     "express": "^4.17.1",
     "mongodb": "^3.6.3",
     "mongojs": "^3.1.0",

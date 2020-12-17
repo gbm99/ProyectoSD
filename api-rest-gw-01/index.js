@@ -3,9 +3,7 @@
 const port = process.env.PORT || 3100;
 const express = require('express');
 const logger = require('morgan');
-const fetch = require('node-fetch');
 
-const URL_WS = "https://localhost:3000/api";
 
 const app = express();
 
@@ -14,6 +12,20 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED="0";
+
+//  API Controller
+const {
+    showElements,
+    showOneElement,
+    postElement,
+    putElement,
+    deleteElement
+} = require("./controllers/api.controller");
+
+//  API Controller
+const {
+    showElementsOfCar,
+} = require("./controllers/cars.controller");
 
 function auth(req,res,next){
     if(!req.headers.authorization ) {
@@ -38,118 +50,17 @@ function auth(req,res,next){
     return next(new Error("No has enviado el token a la cabecera"));
 }
 
-app.get('/api/:colecciones', (req, res,next) =>{
-    const queColeccion = req.params.colecciones;
-    const queURL =`${URL_WS}/${queColeccion}`;
-    fetch( queURL )
-        .then(res => res.json())
-        .then( json => {
-            res.json({
-                result:'OK',
-                coleccion: queColeccion,
-                elementos: json.elementos
-            });
-        }
-    )
-});
+app.get('/api/:colecciones', showElements);
 
-app.get('/api/:colecciones/:id', (req, res,next) =>{
-    const queColeccion = req.params.colecciones;
-    const queId = req.params.id;
-    const queURL =`${URL_WS}/${queColeccion}/${queId}`;
-    fetch( queURL )
-        .then(res => res.json())
-        .then( json => {
-            res.json({
-                result:'OK',
-                coleccion: queColeccion,
-                elementos: json.elementos
-            });
-        }
-    );
-});
+app.get('/api/:colecciones/:id',showOneElement);
 
-app.post('/api/:colecciones',auth, (request, response) =>{
-    const queColeccion = request.params.colecciones;
-    const queURL =`${URL_WS}/${queColeccion}`;
-    const nuevoElemento = request.body;
-    const queToken = request.params.token;
+app.post('/api/:colecciones',auth,postElement);
 
-    fetch( queURL, {
-        method: 'POST',
-        body: JSON.stringify(nuevoElemento),
-        headers: {'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${queToken}`
-        }
+app.put('/api/:colecciones/:id',auth,putElement); 
 
-    } )
-        .then(response => response.json())
-        .then( json => {
-            response.json({
-                result:'OK',
-                coleccion: queColeccion,
-                nuevoElemento: json.elemento
-            });
-        }
-    );
-    /*
-    console.log(request.body);
-    response.status(200).send({products: 'El producto se ha recibido'});
-    */
-});
+app.delete('/api/:colecciones/:id',auth,deleteElement);
 
-app.put('/api/:colecciones/:id',auth, (request, response, next) => {  
-    const queColeccion = request.params.colecciones;
-    const queId = request.params.id;
-    const queURL =`${URL_WS}/${queColeccion}/${queId}`;
-    const nuevoElemento = request.body;
-    const queToken = request.params.token;
-
-    fetch( queURL, {
-        method: 'PUT',
-        body: JSON.stringify(nuevoElemento),
-        headers: {'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${queToken}`
-        }
-
-    } )
-        .then(response => response.json())
-        .then( json => {
-            response.json({
-                result: 'OK',
-                colección: queColeccion,
-                resultado: json.elemento
-            });
-        }
-    );
-}); 
-
-app.delete('/api/:colecciones/:id', (request, response, next) => { 
-    const queColeccion = request.params.colecciones;
-    const queId = request.params.id;
-    const queURL =`${URL_WS}/${queColeccion}/${queId}`;
-    const nuevoElemento = request.body;
-    const queToken = request.params.token;
-
-    fetch( queURL, {
-        method: 'DELETE',
-        body: JSON.stringify(nuevoElemento),
-        headers: {'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${queToken}`
-        }
-
-    } )
-        .then(response => response.json())
-        .then( json => {
-            response.json({
-                result:'OK',
-                coleccion: queColeccion,
-                _id: queId,
-                nuevoElemento: json.elemento
-            });
-        }
-    );
-});
+app.get('/:colecciones',showElementsOfCar);
 
 app.listen(port, () => {
     console.log(`API RESTFUL CRUD ejecutandose en http://localhost:${port}/api/{colecciones}/{id}`);

@@ -1,6 +1,6 @@
 'use strict'
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3300;
 const express = require('express');
 const path = require('path');
 const logger = require('morgan');
@@ -18,11 +18,6 @@ const opciones = {
 };
 
 const app = express();
-
-//Routes
-app.use(require('./routes/airplanes'));
-app.use(require('./routes/cars'));
-app.use(require('./routes/hotels'));
 
 //Static Files
 app.use(express.static(path.join(__dirname, 'public')));
