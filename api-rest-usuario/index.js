@@ -9,7 +9,8 @@ const path = require('path');
 var http = require('http');
 const bodyParser = require('body-parser');
 const methodOverride = require("method-override");
-const passport = require('passport');
+const tokenService = require('../auth/services/token.service');
+const moment = require('moment');
 
 // Settings
 var exphbs = require('express-handlebars');
@@ -17,30 +18,15 @@ router.set('views', path.join(__dirname, 'views'));
 router.engine('.hbs',exphbs({
     extname: '.hbs'
 }));
-router.set('view engine', '.hbs');
 const User = require('./models/User');
-require('./config/passport');
+const { doesNotMatch } = require('assert');
 router.use(cookieParser());
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(methodOverride('_method'));
-router.use(session({
-    secret: 'mysecretapp',
-    resave: true,
-    saveUninitialized: true
-}));
+
 //Static Files
 router.use(express.static(path.join(__dirname, 'public')));
-router.use(passport.initialize());
-router.use(passport.session());
-
-router.get('/users/signin', (req,res) =>{
-    res.render('users/Signin');
-});
-
-router.get('/users/signup', (req,res) =>{
-    res.render('users/Signup');
-});
 
 router.post('/users/signup', async (req,res,next) =>{
 
@@ -60,7 +46,7 @@ router.post('/users/signup', async (req,res,next) =>{
         errors.push({text: 'Contraseña must be at least 4 characters'});
     }
     if(errors.length != 0){
-        res.render('users/Signup',{errors,email,name,password,confirm_password});
+        res.render('/users/protected');
     }
     else{
         const emailUser = await User.findOne({email: email});
@@ -71,7 +57,7 @@ router.post('/users/signup', async (req,res,next) =>{
             const newUser = new User({name,email,password});
             newUser.password = await newUser.encryptPassword(password);
             await newUser.save();
-            res.redirect('/users/Signin');
+            res.redirect('/users/cookieSet');
             
         }
 
@@ -79,10 +65,23 @@ router.post('/users/signup', async (req,res,next) =>{
 
 })
 
-router.post('/users/signin', passport.authenticate('local', {
-    successRedirect: '/users/cookieSet',
-    failureRedirect: '/users/signin'
-}));
+router.post('/users/signin',  async (req,res,next) =>{
+    const{email,password}=req.body
+    const NewUser=  await User.findOne({email: email});
+
+    if(!NewUser){
+        res.status(400).json({msg: 'Introduce the correct email'});
+    }
+    else{
+        const match = await NewUser.matchPassword(password);
+        if(match){
+            res.redirect('/users/cookieSet');
+        }
+        else{
+            res.redirect('/users/400');
+        }
+    }
+});
 
 function validateCookie(req,res,next){
 
@@ -107,10 +106,23 @@ router.get('/users/cookieSet', (req,res) =>{
     res.status(200).json({msg:"Logged In!"});
 });
 
+router.get('/users/400', (req,res) =>{
+    
+    res.status(400).json({msg: 'Introduce email and password'});
+});
+
 router.get('/users/protected',validateCookie,(req,res) =>{
     res.status(200).json({msg: 'You are authorized'});
 });
 
+router.get('/users/logout', (req,res) =>{
+   req.session.destroy(function (err) {
+       req.session = null;
+       res.clearCookie('session_id');
+    res.redirect('/users/protected');
+   })
+})
+
 http.createServer(router).listen(port, () => {
-    console.log(`API RESTFUL CRUD ejecutandose en https://localhost:${port}/users/{colecciones}/{id}`);
+    console.log(`API RESTFUL CRUD ejecutandose en http://localhost:${port}/users/{colecciones}/{id}`);
 });
