@@ -53,14 +53,14 @@ function auth(req,res,next){
 }
 
 
-async function updatePost(userId,iid, title, description, reserved){
+async function updatePost(userId,iid,res, title, description, reserved){
     const session=Airplane.startSession();
     
     const opts = {session};
     const newReserve = new Reserve({userId, amount: "1", type: "credit",title, description,reserved});
-        try{
-            (await session).withTransaction(
-    
+    var devuelve;
+    (await session).withTransaction(
+
                async function(){
                 try{
                     var existe = await Airplane.findById(iid).lean();
@@ -72,21 +72,22 @@ async function updatePost(userId,iid, title, description, reserved){
                     }
                     else{
                         await newReserve.save(Transaccion);
+                        (await session).commitTransaction();
+                        (await session).endSession();
+                        devuelve=true;
+                        res.status(200).json({msg: 'Reserved Airplane!'});
+                        return(devuelve);
                     }
                 }catch(err){
                     console.log(err);
+                    (await session).abortTransaction();
+                    (await session).endSession();
+                    devuelve=false;
+                    res.status(400).json({msg: 'Transaction went wrong!'});
+                    return(devuelve);
                 }
                },opts);
-            (await session).commitTransaction();
-            (await session).endSession();
-            return true;
-        }catch (error){
-            console.log(error);
-            (await session).abortTransaction();
-            (await session).endSession();
-            return false;
-        }
-    
+                   
 }
 
 app.get('/aviones', async(req,res) =>{
@@ -134,11 +135,7 @@ app.put('/aviones/edit-airplane/:id', auth,async(req, res) =>{
 
 app.post('/aviones/reserva/:id',async(req, res) =>{
     const {email, title, description,reserved}=req.body;
-    var trans=await updatePost(email,req.params.id, title, description, reserved);
-    if(trans)
-    res.status(200).json({msg: 'Reserved Airplane!'});
-    else
-    res.status(400).json({msg: 'Transaction went wrong!'});
+    await updatePost(email,req.params.id,res, title, description, reserved);
 })
 
 app.delete('/aviones/delete/:id',auth,async(req,res) =>{
