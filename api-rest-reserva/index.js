@@ -11,11 +11,13 @@ const URL_DB = "mongodb+srv://gbm99:salami99@ClusterSD.mdwel.mongodb.net";
 const https = require('https');
 const fs = require('fs');
 const helmet = require("helmet");
+const fetch = require('node-fetch');
 
 const opciones = {
     key: fs.readFileSync('./cert/key.pem'),
     cert: fs.readFileSync('./cert/cert.pem')
 };
+const Reserve = require('./models/Reserve');
 
 const app = express();
 
@@ -78,6 +80,42 @@ async function listDatabases(){
     databaslist.databases.forEach(db => array.push(db.name));
     return array;
 };
+
+const Transaccion = {
+    readPreference: 'primary',
+    readConcern:{ level: 'local'},
+    writeConcern: {w: 'majority'}
+    }
+
+async function updatePost(userId, title,res){
+    const session=Reserve.startSession();
+    
+    const opts = {session};
+    const newReserve = new Reserve({userId, amount: "1", type: "credit",title,reserved: "1"});
+
+    (await session).withTransaction(
+
+        async function(){
+            var devuelve;
+                try{
+                    if(await Reserve.findOne({title:title})){
+                        throw new Error('It is already in a reserve');
+                    }
+                    else{
+                        await newReserve.save(Transaccion);
+                        (await session).commitTransaction();
+                        (await session).endSession();
+                        res.status(200).json({msg: 'Reserved Airplane!'});
+
+                    }
+                }catch(err){
+                    console.log(err);
+                    (await session).abortTransaction();
+                    (await session).endSession();
+                    res.status(400).json({msg: 'Transaction msg is already reserved!'});
+                }
+               },opts);                   
+}
 
 app.get('/api',(request, response, next) => {
     console.log('GET /api');
@@ -144,6 +182,53 @@ app.post('/api/:colecciones',auth, (request, response) =>{
     console.log(request.body);
     response.status(200).send({products: 'El producto se ha recibido'});
     */
+});
+
+app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
+    const queColeccion = request.params.colecciones;
+    const queId = request.params.id;
+    var URL_WS;
+    if(queColeccion=="aviones"){
+        URL_WS=3700;
+    }
+    else if(queColeccion=="coches"){
+        URL_WS=3600;
+    }
+    else if(queColeccion=="hoteles"){
+        URL_WS=3500;
+    }
+    else{
+        response.json({
+            result:'Error'
+        });
+    }
+    const queURL =`http://localhost:${URL_WS}/${queColeccion}/reserva/${queId}`;
+    const nuevoElemento = request.body;
+    const queToken = request.params.token;
+    
+    fetch( queURL, {
+        method: 'POST',
+        body: JSON.stringify(nuevoElemento),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( async function (json) {
+
+            const {email,title}=request.body;
+            console.log(json.result);
+            if(json.result=='OK'){
+                await updatePost(email, title,response); 
+            }
+            else{
+                response.status(400).json({msg: 'That product does not exist!'});
+            }
+
+            
+        });
+    //falta parte banco
 });
 
 app.put('/api/:colecciones/:id',auth, (req, res, next) => {  

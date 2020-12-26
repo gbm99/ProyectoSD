@@ -16,7 +16,6 @@ var mongoClient = new MongoClient(URL_DB,{ useUnifiedTopology: true });
 mongoClient.connect();
 
 const Airplane = require('./models/Airplane');
-const Reserve = require('./models/Reserve');
 //const Transactions = require('../models/Airplane');
 
 app.use(bodyParser.json());
@@ -50,44 +49,6 @@ function auth(req,res,next){
         mensajes: "Acceso no autorizado a este servicio"
     })
     return next(new Error("No has enviado el token a la cabecera"));
-}
-
-
-async function updatePost(userId,iid,res, title, description, reserved){
-    const session=Airplane.startSession();
-    
-    const opts = {session};
-    const newReserve = new Reserve({userId, amount: "1", type: "credit",title, description,reserved});
-    var devuelve;
-    (await session).withTransaction(
-
-               async function(){
-                try{
-                    var existe = await Airplane.findById(iid).lean();
-                    if(!existe){
-                        throw new Error('It does not exist');
-                    }
-                    else if(await Reserve.findOne({title:title})){
-                        throw new Error('It is already in a reserve');
-                    }
-                    else{
-                        await newReserve.save(Transaccion);
-                        (await session).commitTransaction();
-                        (await session).endSession();
-                        devuelve=true;
-                        res.status(200).json({msg: 'Reserved Airplane!'});
-                        return(devuelve);
-                    }
-                }catch(err){
-                    console.log(err);
-                    (await session).abortTransaction();
-                    (await session).endSession();
-                    devuelve=false;
-                    res.status(400).json({msg: 'Transaction went wrong!'});
-                    return(devuelve);
-                }
-               },opts);
-                   
 }
 
 app.get('/aviones', async(req,res) =>{
@@ -134,8 +95,19 @@ app.put('/aviones/edit-airplane/:id', auth,async(req, res) =>{
 });
 
 app.post('/aviones/reserva/:id',async(req, res) =>{
-    const {email, title, description,reserved}=req.body;
-    await updatePost(email,req.params.id,res, title, description, reserved);
+    const {email,title}=req.body;
+    const queId = req.params.id;
+    var existe = await Airplane.findOne({_id:queId,title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
 })
 
 app.delete('/aviones/delete/:id',auth,async(req,res) =>{
