@@ -12,6 +12,7 @@ const https = require('https');
 const fs = require('fs');
 const helmet = require("helmet");
 const fetch = require('node-fetch');
+var AsynLock = require('async-lock');
 
 const opciones = {
     key: fs.readFileSync('./cert/key.pem'),
@@ -92,17 +93,19 @@ async function updatePost(userId, title,res){
     
     const opts = {session};
     const newReserve = new Reserve({userId, amount: "1", type: "credit",title,reserved: "1"});
-
+    const lock = new AsynLock();
     (await session).withTransaction(
 
         async function(){
-            var devuelve;
                 try{
                     if(await Reserve.findOne({title:title})){
                         throw new Error('It is already in a reserve');
                     }
                     else{
-                        await newReserve.save(Transaccion);
+                        await lock.acquire("key",async function(){
+                            await newReserve.save(Transaccion);
+                        });
+                        
                         (await session).commitTransaction();
                         (await session).endSession();
                         res.status(200).json({msg: 'Reserved Airplane!'});
