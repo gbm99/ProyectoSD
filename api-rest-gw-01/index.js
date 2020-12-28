@@ -19,13 +19,9 @@ const {
     showOneElement,
     postElement,
     putElement,
-    deleteElement
+    deleteElement,
+    postReserve
 } = require("./controllers/api.controller");
-
-//  API Controller
-const {
-    showElementsOfCar,
-} = require("./controllers/cars.controller");
 
 function auth(req,res,next){
     if(!req.headers.authorization ) {
@@ -60,7 +56,7 @@ app.put('/api/:colecciones/:id',auth,putElement);
 
 app.delete('/api/:colecciones/:id',auth,deleteElement);
 
-app.get('/:colecciones',showElementsOfCar);
+app.post('/api/:colecciones/:id/pago',auth, postReserve);
 
 app.listen(port, () => {
     console.log(`API RESTFUL CRUD ejecutandose en http://localhost:${port}/api/{colecciones}/{id}`);

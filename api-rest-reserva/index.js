@@ -1,6 +1,6 @@
 'use strict'
 
-const port = process.env.PORT || 3300;
+const port = process.env.PORT || 3000;
 const express = require('express');
 const path = require('path');
 const logger = require('morgan');
@@ -108,14 +108,18 @@ async function updatePost(userId, title,res){
                         
                         (await session).commitTransaction();
                         (await session).endSession();
-                        res.status(200).json({msg: 'Reserved Airplane!'});
+                        res.json({
+                            result:'OKRESERVED'
+                        });
 
                     }
                 }catch(err){
                     console.log(err);
                     (await session).abortTransaction();
                     (await session).endSession();
-                    res.status(400).json({msg: 'Transaction msg is already reserved!'});
+                    res.json({
+                        result:'ALREADYRESERVED'
+                    });
                 }
                },opts);                   
 }
@@ -226,7 +230,9 @@ app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
                 await updatePost(email, title,response); 
             }
             else{
-                response.status(400).json({msg: 'That product does not exist!'});
+                response.json({
+                    result:'KOPRODUCT'
+                });
             }
 
             
