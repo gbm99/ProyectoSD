@@ -131,10 +131,10 @@ apiCtrl.postReserve= (request, response) =>{
         .then(response => response.json())
         .then( json=>{
             if(json.result=='KOPRODUCT'){
-                response.status(400).json({msg: 'That product does not exist!'});
+                response.status(400).json({msg: 'That service does not exist!'});
             }
             else if(json.result=='OKRESERVED'){
-                response.status(200).json({msg: 'Reserved Airplane!'});
+                response.status(200).json({msg: 'Reserved Service!'});
             }
             else if(json.result=='ALREADYRESERVED'){
                 response.status(400).json({msg: 'Transaction msg is already reserved!'});

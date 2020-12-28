@@ -95,6 +95,22 @@ app.put('/hoteles/edit-hotel/:id', auth,async(req, res) =>{
     res.redirect('/hoteles');
 });
 
+app.post('/hoteles/reserva/:id',async(req, res) =>{
+    const {email,title}=req.body;
+    const queId = req.params.id;
+    var existe = await Hotel.findOne({_id:queId,title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
+})
+
 app.delete('/hoteles/delete/:id',auth,async(req,res) =>{
     await Hotel.findByIdAndDelete(req.params.id);
     res.redirect('/hoteles');

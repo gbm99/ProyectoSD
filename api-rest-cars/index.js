@@ -92,11 +92,27 @@ app.put('/coches/edit-car/:id',auth, async(req, res) =>{
     res.redirect('/coches');
 });
 
+app.post('/coches/reserva/:id',async(req, res) =>{
+    const {email,title}=req.body;
+    const queId = req.params.id;
+    var existe = await Car.findOne({_id:queId,title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
+})
+
 app.delete('/coches/delete/:id',auth,async(req,res) =>{
     await Car.findByIdAndDelete(req.params.id);
     res.redirect('/coches');
 })
 
 app.listen(port, () => {
-    console.log(`API coche ejecutandose en http://localhost:${port}/hoteles/{colecciones}/{id}`);
+    console.log(`API coche ejecutandose en http://localhost:${port}/coches/{colecciones}/{id}`);
 });
