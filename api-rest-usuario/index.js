@@ -3,14 +3,11 @@
 const port = process.env.PORT || 5000;
 const express = require('express');
 const router = express();
-const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 var http = require('http');
 const bodyParser = require('body-parser');
 const methodOverride = require("method-override");
-const tokenService = require('../auth/services/token.service');
-const moment = require('moment');
 
 // Settings
 var exphbs = require('express-handlebars');
@@ -19,7 +16,6 @@ router.engine('.hbs',exphbs({
     extname: '.hbs'
 }));
 const User = require('./models/User');
-const { doesNotMatch } = require('assert');
 router.use(cookieParser());
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));

@@ -13,11 +13,19 @@ const fs = require('fs');
 const helmet = require("helmet");
 const fetch = require('node-fetch');
 var AsynLock = require('async-lock');
+var Request = require("request-promise");
 
 const opciones = {
     key: fs.readFileSync('./cert/key.pem'),
     cert: fs.readFileSync('./cert/cert.pem')
 };
+
+const options = {
+url: "http://localhost:4000/bank",
+headers: {'Content-Type': 'application/json',
+          'Authorization': `Bearer MITOKEN123456789`
+}
+}
 const Reserve = require('./models/Reserve');
 
 const app = express();
@@ -36,6 +44,7 @@ app.use(express.json());
 
 // Settings
 var exphbs = require('express-handlebars');
+const { callbackify } = require('util');
 app.set('views', path.join(__dirname, 'views'));
 app.engine('.hbs',exphbs({
     extname: '.hbs'
@@ -102,16 +111,31 @@ async function updatePost(userId, title,res){
                         throw new Error('It is already in a reserve');
                     }
                     else{
-                        await lock.acquire("key",async function(){
-                            await newReserve.save(Transaccion);
-                        });
                         
+                        Request(options)
+                        .then( async function (json) {
+                            var jsson = JSON.parse(json);
+                            console.log(jsson.result);
+                            if(jsson.result=='KO'){
+                                throw new Error('Not enough money');
+                            }
+                            else{
+                                await lock.acquire("key",async function(){
+                                    await newReserve.save(Transaccion);
+                                });
+                                res.json({
+                                    result:'OKRESERVED'
+                                });
+                            }
+                        })
+                        .catch(err=>{
+                            console.log(err);
+                            res.json({
+                                result:'ERRBANK'
+                            });
+                        });
                         (await session).commitTransaction();
                         (await session).endSession();
-                        res.json({
-                            result:'OKRESERVED'
-                        });
-
                     }
                 }catch(err){
                     console.log(err);
@@ -237,7 +261,6 @@ app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
 
             
         });
-    //falta parte banco
 });
 
 app.put('/api/:colecciones/:id',auth, (req, res, next) => {  
@@ -280,7 +303,15 @@ app.delete('/api/:colecciones/:id',auth, (req, res, next) => {
         }
     ); 
 });
-https.createServer(opciones,app).listen(port, () => {
+https.createServer(opciones,app,function(socket){
+socket.write('Send a message');
+
+socket.on("data", function(data){
+    console.log('Received: %s [it is %d bytes long]',
+    data.toString().replace(/(\n)/gm,""),
+    data.length);
+});
+}).listen(port, () => {
     console.log(`API RESTFUL CRUD ejecutandose en https://localhost:${port}/api/{colecciones}/{id}`);
 });
 /*

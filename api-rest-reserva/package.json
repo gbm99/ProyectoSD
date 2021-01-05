@@ -44,6 +44,8 @@
     "node-php": "0.0.1",
     "node-phpcgi": "^0.3.7",
     "php": "^1.0.1",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
     "sphp": "^0.6.3"
   },
   "devDependencies": {
