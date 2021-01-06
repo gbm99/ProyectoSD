@@ -74,9 +74,15 @@ app.post('/aviones/add', auth,async(req, res) =>{
         res.send('Introduce bien los datos');
     }
     else{
+        var existe = await Airplane.findOne({title:title}).lean();
+        if(existe){
+        res.send('Ya existe este servicio en la base de datos');
+        }
+        else{
         const newAirplane = new Airplane({title,description,reserved});
         await newAirplane.save(Transaccion);
         res.redirect('/aviones');
+        }
     }
 });
 
@@ -98,6 +104,21 @@ app.post('/aviones/reserva/:id',async(req, res) =>{
     const {email,title}=req.body;
     const queId = req.params.id;
     var existe = await Airplane.findOne({_id:queId,title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
+})
+
+app.post('/aviones/reserva',async(req, res) =>{
+    const {title}=req.body;
+    var existe = await Airplane.findOne({title:title}).lean();
     if(existe){
         res.json({
             result:'OK'

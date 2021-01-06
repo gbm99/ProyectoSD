@@ -72,9 +72,15 @@ app.post('/coches/add', auth,async(req, res) =>{
         res.send('Introduce bien los datos');
     }
     else{
+        var existe = await Car.findOne({title:title}).lean();
+        if(existe){
+        res.send('Ya existe este servicio en la base de datos');
+        }
+        else{
         const newCar = new Car({title,description});
         await newCar.save(Transaccion);
         res.redirect('/coches');
+        }
     }
 });
 
@@ -106,7 +112,22 @@ app.post('/coches/reserva/:id',async(req, res) =>{
             result:'NOEXISTE'
         });
     }
-})
+});
+
+app.post('/coches/reserva',async(req, res) =>{
+    const {title}=req.body;
+    var existe = await Car.findOne({title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
+});
 
 app.delete('/coches/delete/:id',auth,async(req,res) =>{
     await Car.findByIdAndDelete(req.params.id);

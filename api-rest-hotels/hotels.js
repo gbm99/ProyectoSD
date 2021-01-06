@@ -74,9 +74,15 @@ app.post('/hoteles/add', auth,async(req, res) =>{
         res.send('Introduce bien los datos');
     }
     else{
+        var existe = await Hotel.findOne({title:title}).lean();
+        if(existe){
+        res.send('Ya existe este servicio en la base de datos');
+        }
+        else{
         const newHotel = new Hotel({title,description});
         await newHotel.save(Transaccion);
         res.redirect('/hoteles');
+        }
     }
 });
 
@@ -109,7 +115,23 @@ app.post('/hoteles/reserva/:id',async(req, res) =>{
             result:'NOEXISTE'
         });
     }
-})
+});
+
+app.post('/hoteles/reserva',async(req, res) =>{
+    const {title}=req.body;
+    const queId = req.params.id;
+    var existe = await Hotel.findOne({title:title}).lean();
+    if(existe){
+        res.json({
+            result:'OK'
+        });
+    }
+    else{
+        res.json({
+            result:'NOEXISTE'
+        });
+    }
+});
 
 app.delete('/hoteles/delete/:id',auth,async(req,res) =>{
     await Hotel.findByIdAndDelete(req.params.id);

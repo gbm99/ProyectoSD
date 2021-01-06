@@ -263,6 +263,84 @@ app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
         });
 });
 
+app.post('/api/paqueteViaje/pago',auth, (request, res, next) =>{
+
+    var queURL =`http://localhost:3500/hoteles/reserva`;
+    var {email, serviceH, serviceA, serviceC} = request.body;
+    const queToken = request.params.token;
+
+    fetch( queURL, {
+        method: 'POST',
+        body: JSON.stringify({title:serviceH}),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( async function (json) {
+
+            console.log(json.result);
+            if(json.result=='OK'){
+                 
+            }
+            else{
+                return next();
+            }
+        })
+        .catch(function(error){
+            console.log('hubo un error: ' + error.message);
+        });
+    queURL =`http://localhost:3700/aviones/reserva`;
+
+    fetch( queURL, {
+        method: 'POST',
+        body: JSON.stringify({title:serviceA}),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( async function (json) {
+
+            console.log(json.result);
+            if(json.result=='OK'){
+            }
+            else{
+                return next();
+            }
+        })
+        .catch(function(error){
+            console.log('hubo un error: ' + error.message);
+        });
+
+    queURL =`http://localhost:3600/coches/reserva`;
+    fetch( queURL, {
+        method: 'POST',
+        body: JSON.stringify({title:serviceC}),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( async function (json) {
+
+            console.log(json.result);
+            if(json.result=='OK'){ 
+            }
+            else{
+                return next();
+            }
+        })
+        .catch(function(error){
+            console.log('hubo un error: ' + error.message);
+        });
+        
+        
+});
+
 app.put('/api/:colecciones/:id',auth, (req, res, next) => {  
     const queId = req.params.id;
     const queColeccion = req.params.colecciones;
@@ -282,6 +360,7 @@ app.put('/api/:colecciones/:id',auth, (req, res, next) => {
             });
         }
     ); 
+    
 }); 
 
 app.delete('/api/:colecciones/:id',auth, (req, res, next) => { 
