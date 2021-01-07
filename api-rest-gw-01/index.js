@@ -20,7 +20,9 @@ const {
     postElement,
     putElement,
     deleteElement,
-    postReserve
+    postReserve,
+    postReservePack,
+    deleteReserve
 } = require("./controllers/api.controller");
 
 function auth(req,res,next){
@@ -52,11 +54,15 @@ app.get('/api/:colecciones/:id',showOneElement);
 
 app.post('/api/:colecciones',auth,postElement);
 
+app.post('/api/:colecciones/:id/pago',auth, postReserve);
+
+app.post('/api/paqueteViaje/pago',auth, postReservePack);
+
 app.put('/api/:colecciones/:id',auth,putElement); 
 
 app.delete('/api/:colecciones/:id',auth,deleteElement);
 
-app.post('/api/:colecciones/:id/pago',auth, postReserve);
+app.delete('/api/borrarReserva', auth, deleteReserve);
 
 app.listen(port, () => {
     console.log(`API RESTFUL CRUD ejecutandose en http://localhost:${port}/api/{colecciones}/{id}`);

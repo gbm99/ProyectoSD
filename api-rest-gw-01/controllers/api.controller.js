@@ -146,4 +146,65 @@ apiCtrl.postReserve= (request, response) =>{
         )
 };
 
+
+apiCtrl.postReservePack= (request, response) =>{
+    const queColeccion = request.params.colecciones;
+    const queId = request.params.id;
+    const queURL =`${URL_WS}/paqueteViaje/pago`;
+    const nuevoElemento = request.body;
+    const queToken = request.params.token;
+
+    fetch( queURL, {
+        method: 'POST',
+        body: JSON.stringify(nuevoElemento),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( json=>{
+            if(json.result=='KOPRODUCT'){
+                response.status(400).json({msg: 'That service does not exist!'});
+            }
+            else if(json.result=='OKRESERVED'){
+                response.status(200).json({msg: 'Reserved Service!'});
+            }
+            else if(json.result=='ALREADYRESERVED'){
+                response.status(400).json({msg: 'Transaction msg is already reserved!'});
+            }
+            else if(json.result=='Error'){
+                response.status(400).json({msg: 'Cant connect to provider'});
+            }
+        }
+        )
+};
+
+apiCtrl.deleteReserve= (request, response, next) => { 
+    const queColeccion = request.params.colecciones;
+    const queId = request.params.id;
+    const queURL =`${URL_WS}/borrarReserva`;
+    const nuevoElemento = request.body;
+    const queToken = request.params.token;
+
+    fetch( queURL, {
+        method: 'DELETE',
+        body: JSON.stringify(nuevoElemento),
+        headers: {'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${queToken}`
+        }
+
+    } )
+        .then(response => response.json())
+        .then( json => {
+            response.json({
+                result:'OK',
+                coleccion: queColeccion,
+                _id: queId,
+                nuevoElemento: json.elemento
+            });
+        }
+    );
+};
+
 module.exports = apiCtrl;
