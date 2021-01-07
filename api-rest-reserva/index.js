@@ -26,7 +26,7 @@ headers: {'Content-Type': 'application/json',
           'Authorization': `Bearer MITOKEN123456789`
 }
 }
-const Reserve = require('./models/Reserve');
+var Reserve = require('./models/Reserve');
 
 const app = express();
 
@@ -101,14 +101,23 @@ async function updatePost(userId, title,res){
     const session=Reserve.startSession();
     
     const opts = {session};
-    const newReserve = new Reserve({userId, amount: "1", type: "credit",title,reserved: "1"});
+    const newReserve = new Reserve({email: userId, amount: "1", type: "credit",title:title,reserved: "1"});
     const lock = new AsynLock();
     (await session).withTransaction(
 
         async function(){
                 try{
                     if(await Reserve.findOne({title:title})){
-                        throw new Error('It is already in a reserve');
+                        throw new Error('It is already in a simple reserve');
+                    }
+                    else if(await Reserve.findOne({serviceH:title})){
+                        throw new Error('It is already in a reservepack Hotel');
+                    }
+                    else if(await Reserve.findOne({serviceA:title})){
+                        throw new Error('It is already in a reservepack Airplane');
+                    }
+                    else if(await Reserve.findOne({serviceC:title})){
+                        throw new Error('It is already in a reservepack Car');
                     }
                     else{
                         
@@ -146,6 +155,73 @@ async function updatePost(userId, title,res){
                     });
                 }
                },opts);                   
+}
+
+async function updateTravelPacks(email, serviceH, serviceA, serviceC,res){
+    const session=Reserve.startSession();
+    
+    const opts = {session};
+    const newReserve = new Reserve({email:email, amount: "1", type: "credit",serviceH:serviceH, serviceA:serviceA, serviceC:serviceC,reserved: "1"});
+    const lock = new AsynLock();
+
+    (await session).withTransaction(
+
+        async function(){
+                try{
+                    if(await Reserve.findOne({title:serviceH})){
+                        throw new Error('It is already in a simple reserve');
+                    }
+                    else if(await Reserve.findOne({title:serviceA})){
+                        throw new Error('It is already in a simple reserve');
+                    }
+                    else if(await Reserve.findOne({title:serviceC})){
+                        throw new Error('It is already in a simple reserve');
+                    }
+                    else if(await Reserve.findOne({serviceH:serviceH})){
+                        throw new Error('It is already in a reservepack Hotel');
+                    }
+                    else if(await Reserve.findOne({serviceA:serviceA})){
+                        throw new Error('It is already in a reservepack Airplane');
+                    }
+                    else if(await Reserve.findOne({serviceC:serviceC})){
+                        throw new Error('It is already in a reservepack Car');
+                    }
+                    else{
+                        
+                        Request(options)
+                        .then( async function (json) {
+                            var jsson = JSON.parse(json);
+                            console.log(jsson.result);
+                            if(jsson.result=='KO'){
+                                throw new Error('Not enough money');
+                            }
+                            else{
+                                await lock.acquire("key",async function(){
+                                    await newReserve.save(Transaccion);
+                                });
+                                res.json({
+                                    result:'OKRESERVED'
+                                });
+                            }
+                        })
+                        .catch(err=>{
+                            console.log(err);
+                            res.json({
+                                result:'ERRBANK'
+                            });
+                        });
+                        (await session).commitTransaction();
+                        (await session).endSession();
+                    }
+                }catch(err){
+                    console.log(err);
+                    (await session).abortTransaction();
+                    (await session).endSession();
+                    res.json({
+                        result:'ALREADYRESERVED'
+                    });
+                }
+               },opts);                  
 }
 
 app.get('/api',(request, response, next) => {
@@ -263,7 +339,7 @@ app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
         });
 });
 
-app.post('/api/paqueteViaje/pago',auth, (request, res, next) =>{
+app.post('/api/paqueteViaje/pago',auth, (request, res) =>{
 
     var queURL =`http://localhost:3500/hoteles/reserva`;
     var {email, serviceH, serviceA, serviceC} = request.body;
@@ -282,63 +358,65 @@ app.post('/api/paqueteViaje/pago',auth, (request, res, next) =>{
 
             console.log(json.result);
             if(json.result=='OK'){
-                 
+                queURL =`http://localhost:3700/aviones/reserva`;
+                fetch( queURL, {
+                    method: 'POST',
+                    body: JSON.stringify({title:serviceA}),
+                    headers: {'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${queToken}`
+                    }
+            
+                } )
+                    .then(response => response.json())
+                    .then( async function (json) {
+            
+                        console.log(json.result);
+                        if(json.result=='OK'){
+                            queURL =`http://localhost:3600/coches/reserva`;
+                            fetch( queURL, {
+                                method: 'POST',
+                                body: JSON.stringify({title:serviceC}),
+                                headers: {'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${queToken}`
+                                }
+
+                            } )
+                                .then(response => response.json())
+                                .then( async function (json) {
+
+                                    console.log(json.result);
+                                    if(json.result=='OK'){ 
+                                        await updateTravelPacks(email, serviceH, serviceA, serviceC,res);
+                                    }
+                                    else{
+                                        res.json({
+                                            result:'KOCAR'
+                                        });
+                                    }
+                                })
+                                .catch(function(error){
+                                    console.log('hubo un error: ' + error.message);
+                                });
+                        }
+                        else{
+                            res.json({
+                                result:'KOAIRPLAIN'
+                            });
+                        }
+                    })
+                    .catch(function(error){
+                        console.log('hubo un error: ' + error.message);
+                    });
             }
             else{
-                return next();
+                res.json({
+                    result:'KOHOTEL'
+                });
             }
         })
         .catch(function(error){
             console.log('hubo un error: ' + error.message);
         });
-    queURL =`http://localhost:3700/aviones/reserva`;
-
-    fetch( queURL, {
-        method: 'POST',
-        body: JSON.stringify({title:serviceA}),
-        headers: {'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${queToken}`
-        }
-
-    } )
-        .then(response => response.json())
-        .then( async function (json) {
-
-            console.log(json.result);
-            if(json.result=='OK'){
-            }
-            else{
-                return next();
-            }
-        })
-        .catch(function(error){
-            console.log('hubo un error: ' + error.message);
-        });
-
-    queURL =`http://localhost:3600/coches/reserva`;
-    fetch( queURL, {
-        method: 'POST',
-        body: JSON.stringify({title:serviceC}),
-        headers: {'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${queToken}`
-        }
-
-    } )
-        .then(response => response.json())
-        .then( async function (json) {
-
-            console.log(json.result);
-            if(json.result=='OK'){ 
-            }
-            else{
-                return next();
-            }
-        })
-        .catch(function(error){
-            console.log('hubo un error: ' + error.message);
-        });
-        
-        
 });
 
 app.put('/api/:colecciones/:id',auth, (req, res, next) => {  
@@ -382,6 +460,22 @@ app.delete('/api/:colecciones/:id',auth, (req, res, next) => {
         }
     ); 
 });
+
+app.delete('/api/borrarReserva',auth, async (req, res, next) => { 
+    var elementoNuevo = req.body;
+
+    if(await Reserve.findOneAndRemove(elementoNuevo)){
+        res.json({
+            result: 'BORRADO'
+        });
+    }
+    else{
+        res.json({
+            result: 'NOEXISTE'
+        });
+    }
+});
+
 https.createServer(opciones,app,function(socket){
 socket.write('Send a message');
 

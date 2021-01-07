@@ -10,10 +10,13 @@ mongoose.connect("mongodb+srv://gbm99:salami99@clustersd.mdwel.mongodb.net/dbres
 const { Schema } = mongoose;
 
 const ReserveSchema = new Schema({
-    userId:{type: String, required: true},
+    email:{type: String, required: true},
     amount:{type: Number, required: true},
     type:{type: String, required: true},
-    title: { type: String, required: true},
+    title: { type: String, required: false},
+    serviceH: { type: String, required: false},
+    serviceA: { type: String, required: false},
+    serviceC: { type: String, required: false},
     date: {type: Date, default: Date.now}
 });
 
@@ -26,4 +29,7 @@ const ReserveSchema = new Schema({
                                                     |
                                                     v
 en module exports exportamos con mongoose.model('Transactions',TransactionSchema)*/
-module.exports = mongoose.model('Reserve',ReserveSchema);
+
+var Reserve = mongoose.model('Reserve',ReserveSchema);
+
+module.exports = Reserve;
