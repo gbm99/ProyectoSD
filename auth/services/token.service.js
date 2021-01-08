@@ -3,8 +3,8 @@
 const jwt = require('jwt-simple');
 const moment = require('moment');
 
-const SECRET = require('../config').SECRET;
-const EXP_TIME = require('../config').TOKEN_EXP_TIME;
+const SECRET = 'miclavesecretadetoken';
+const EXP_TIME = 7*24*60;
 
 // Crear token
 //

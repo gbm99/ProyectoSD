@@ -118,7 +118,7 @@ apiCtrl.postReserve= (request, response) =>{
     const queId = request.params.id;
     const queURL =`${URL_WS}/${queColeccion}/${queId}/pago`;
     const nuevoElemento = request.body;
-    const queToken = request.params.token;
+    const queToken = request.headers.authorization.split(" ")[1];
 
     fetch( queURL, {
         method: 'POST',
@@ -152,7 +152,7 @@ apiCtrl.postReservePack= (request, response) =>{
     const queId = request.params.id;
     const queURL =`${URL_WS}/paqueteViaje/pago`;
     const nuevoElemento = request.body;
-    const queToken = request.params.token;
+    const queToken = request.headers.authorization.split(" ")[1];
 
     fetch( queURL, {
         method: 'POST',
@@ -185,7 +185,7 @@ apiCtrl.deleteReserve= (request, response, next) => {
     const queId = request.params.id;
     const queURL =`${URL_WS}/borrarReserva`;
     const nuevoElemento = request.body;
-    const queToken = request.params.token;
+    const queToken = request.headers.authorization.split(" ")[1];
 
     fetch( queURL, {
         method: 'DELETE',

@@ -3,7 +3,7 @@
 const port = process.env.PORT || 3100;
 const express = require('express');
 const logger = require('morgan');
-
+const tokenService = require('../auth/services/token.service');
 
 const app = express();
 
@@ -48,21 +48,38 @@ function auth(req,res,next){
     return next(new Error("No has enviado el token a la cabecera"));
 }
 
+function auth2(req,res,next){
+    if(!req.headers.authorization.split(" ")[1] ) {
+        res.status(401).json({
+            result: 'KO',
+            mensajes: "No has enviado el token en la cabecera"
+        })
+        return next();
+    }
+    const token = req.headers.authorization.split(" ")[1];
+    tokenService.decodificaToken(token)
+    .then(userID => {
+        return next();
+    })
+    .catch(err =>console.log({Error1: err})
+    );
+}
+
 app.get('/api/:colecciones', showElements);
 
 app.get('/api/:colecciones/:id',showOneElement);
 
 app.post('/api/:colecciones',auth,postElement);
 
-app.post('/api/:colecciones/:id/pago',auth, postReserve);
+app.post('/api/:colecciones/:id/pago',auth2, postReserve);
 
-app.post('/api/paqueteViaje/pago',auth, postReservePack);
+app.post('/api/paqueteViaje/pago',auth2, postReservePack);
 
 app.put('/api/:colecciones/:id',auth,putElement); 
 
 app.delete('/api/:colecciones/:id',auth,deleteElement);
 
-app.delete('/api/borrarReserva', auth, deleteReserve);
+app.delete('/api/borrarReserva',auth2, deleteReserve);
 
 app.listen(port, () => {
     console.log(`API RESTFUL CRUD ejecutandose en http://localhost:${port}/api/{colecciones}/{id}`);

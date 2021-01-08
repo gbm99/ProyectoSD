@@ -15,6 +15,8 @@ const fetch = require('node-fetch');
 var AsynLock = require('async-lock');
 var Request = require("request-promise");
 
+const tokenService = require('../auth/services/token.service');
+
 const opciones = {
     key: fs.readFileSync('./cert/key.pem'),
     cert: fs.readFileSync('./cert/cert.pem')
@@ -82,6 +84,23 @@ function auth(req,res,next){
         mensajes: "Acceso no autorizado a este servicio"
     })
     return next(new Error("No has enviado el token a la cabecera"));
+}
+
+function auth2(req,res,next){
+    if(!req.headers.authorization.split(" ")[1] ) {
+        res.status(401).json({
+            result: 'KO',
+            mensajes: "No has enviado el token en la cabecera"
+        })
+        return next();
+    }
+    const token = req.headers.authorization.split(" ")[1];
+    tokenService.decodificaToken(token)
+    .then(userID => {
+        return next();
+    })
+    .catch(err =>console.log({Error1: err})
+    );
 }
 
 async function listDatabases(){
@@ -291,7 +310,7 @@ app.post('/api/:colecciones',auth, (request, response) =>{
     */
 });
 
-app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
+app.post('/api/:colecciones/:id/pago',auth2, (request, response) =>{
     const queColeccion = request.params.colecciones;
     const queId = request.params.id;
     var URL_WS;
@@ -339,7 +358,7 @@ app.post('/api/:colecciones/:id/pago',auth, (request, response) =>{
         });
 });
 
-app.post('/api/paqueteViaje/pago',auth, (request, res) =>{
+app.post('/api/paqueteViaje/pago',auth2, (request, res) =>{
 
     var queURL =`http://localhost:3500/hoteles/reserva`;
     var {email, serviceH, serviceA, serviceC} = request.body;
@@ -461,7 +480,7 @@ app.delete('/api/:colecciones/:id',auth, (req, res, next) => {
     ); 
 });
 
-app.delete('/api/borrarReserva',auth, async (req, res, next) => { 
+app.delete('/api/borrarReserva',auth2, async (req, res, next) => { 
     var elementoNuevo = req.body;
 
     if(await Reserve.findOneAndRemove(elementoNuevo)){

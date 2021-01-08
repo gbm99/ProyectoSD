@@ -3,32 +3,26 @@
 const port = process.env.PORT || 5000;
 const express = require('express');
 const router = express();
+var bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const path = require('path');
 var http = require('http');
-const bodyParser = require('body-parser');
-const methodOverride = require("method-override");
+const tokenService = require('../auth/services/token.service');
+const moment = require('moment');
 
 // Settings
-var exphbs = require('express-handlebars');
-router.set('views', path.join(__dirname, 'views'));
-router.engine('.hbs',exphbs({
-    extname: '.hbs'
-}));
 const User = require('./models/User');
 router.use(cookieParser());
+router.use(bodyParser.urlencoded({ extended: false}));
 router.use(bodyParser.json());
-router.use(bodyParser.urlencoded({extended: false}));
-router.use(methodOverride('_method'));
 
-//Static Files
-router.use(express.static(path.join(__dirname, 'public')));
+var usuario;
+var token;
 
-router.post('/users/signup', async (req,res,next) =>{
+router.post('/users/signup', async (req,res) =>{
 
-    const{email,name,password,confirm_password}=req.body;
+    const {email,name,password,confirm_password}=req.body;
     const errors = [];
-
+    
     if(email.length < 4){
         errors.push({text: 'Email must be at least 4 characters'});
     }
@@ -53,16 +47,25 @@ router.post('/users/signup', async (req,res,next) =>{
             const newUser = new User({name,email,password});
             newUser.password = await newUser.encryptPassword(password);
             await newUser.save();
+            usuario = {
+                _id:"1234567890988765",
+                email: email,
+                displayName: name,
+                password: password,
+                signupDate: moment().unix(),
+                lastLogin: moment().unix()
+            };
+            token = tokenService.creaToken(usuario);
             res.redirect('/users/cookieSet');
             
         }
 
     }
 
-})
+});
 
 router.post('/users/signin',  async (req,res,next) =>{
-    const{email,password}=req.body
+    const{email,name,password}=req.body
     const NewUser=  await User.findOne({email: email});
 
     if(!NewUser){
@@ -71,6 +74,15 @@ router.post('/users/signin',  async (req,res,next) =>{
     else{
         const match = await NewUser.matchPassword(password);
         if(match){
+            usuario = {
+                _id:"1234567890988765",
+                email: email,
+                displayName: name,
+                password: password,
+                signupDate: moment().unix(),
+                lastLogin: moment().unix()
+            };
+            token = tokenService.creaToken(usuario);
             res.redirect('/users/cookieSet');
         }
         else{
@@ -99,7 +111,7 @@ function validateCookie(req,res,next){
 router.get('/users/cookieSet', (req,res) =>{
     
     res.cookie('session_id', '12345');
-    res.status(200).json({msg:"Logged In!"});
+    res.status(200).json({msg:"Logged In!",token:token});
 });
 
 router.get('/users/400', (req,res) =>{
